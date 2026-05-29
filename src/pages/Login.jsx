@@ -92,7 +92,7 @@ export default function Login() {
         </div>
 
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text3)" }}>
-          Default admin: <code style={{ color: "var(--accent2)" }}>admin@noteshare.local</code> / <code style={{ color: "var(--accent2)" }}>admin123</code>
+        
         </p>
       </div>
     </div>
