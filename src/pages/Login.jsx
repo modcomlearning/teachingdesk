@@ -96,7 +96,7 @@ export default function Login() {
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text3)" }}>
           <code style={{ color: "var(--accent2)" }}>   <span style={{ color: "white" }}>
                Copyright &copy; 2026.
-      </span>   </code>  MODCOM LTD
+      </span>  <b>MODCOM LTD</b> </code>  
         </p>
       
       </div>
