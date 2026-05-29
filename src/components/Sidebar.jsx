@@ -162,7 +162,7 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside className={`sidebar${open ? " sidebar-open" : ""}`}>
-        <div className="sidebar-logo">Note<span>Share</span></div>
+        <div className="sidebar-logo">Teaching<span>Desk</span></div>
 
         <nav className="sidebar-nav">
           {NAV.map(({ to, icon, label }) => (

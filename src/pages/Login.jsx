@@ -38,7 +38,7 @@ export default function Login() {
         {/* Brand */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontFamily: "var(--font-head)", fontSize: 36, color: "var(--text)", lineHeight: 1.1 }}>
-            Note<span style={{ color: "var(--accent)" }}>Share</span>
+            Teaching<span style={{ color: "var(--accent)" }}>Desk</span>
           </div>
           <p style={{ color: "var(--text2)", marginTop: 8, fontSize: 14 }}>
             Instructor learning materials platform
