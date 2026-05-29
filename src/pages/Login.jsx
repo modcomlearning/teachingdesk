@@ -40,6 +40,8 @@ export default function Login() {
           <div style={{ fontFamily: "var(--font-head)", fontSize: 36, color: "var(--text)", lineHeight: 1.1 }}>
             Teaching<span style={{ color: "var(--accent)" }}>Desk</span>
           </div>
+          <br />
+          <h2>Modcom Institute of Technology</h2>
           <p style={{ color: "var(--text2)", marginTop: 8, fontSize: 14 }}>
             Instructor learning materials platform
           </p>
@@ -92,7 +94,7 @@ export default function Login() {
         </div>
 
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text3)" }}>
-        
+          <code style={{ color: "var(--accent2)" }}>Copyright &copy; 2026</code>
         </p>
       </div>
     </div>
