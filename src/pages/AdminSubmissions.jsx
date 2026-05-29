@@ -23,37 +23,27 @@ function fmt(bytes) {
   return (bytes / 1024 / 1024).toFixed(1) + " MB";
 }
 
-// ── Review modal with full approve / reject workflow ──────────
+// ── Review modal ──────────────────────────────────────────────
 function ReviewModal({ sub, onClose, onDone }) {
   const toast = useToast();
+  const [decision,       setDecision]       = useState("approved");
+  const [note,           setNote]           = useState("");
+  const [programs,       setPrograms]       = useState([]);
+  const [modules,        setModules]        = useState([]);
+  const [selProgram,     setSelProgram]     = useState("");
+  const [selModule,      setSelModule]      = useState("");
+  const [folder,         setFolder]         = useState(sub.suggested_folder || "additional");
+  const [titleOverride,  setTitleOverride]  = useState(sub.title || "");
+  const [saving,         setSaving]         = useState(false);
+  const [loadingModules, setLoadingModules] = useState(false);
 
-  const [decision,      setDecision]      = useState("approved");
-  const [note,          setNote]          = useState("");
-  const [programs,      setPrograms]      = useState([]);
-  const [modules,       setModules]       = useState([]);
-  const [selProgram,    setSelProgram]    = useState("");
-  const [selModule,     setSelModule]     = useState("");
-  const [folder,        setFolder]        = useState(sub.suggested_folder || "additional");
-  const [titleOverride, setTitleOverride] = useState(sub.title || "");
-  const [saving,        setSaving]        = useState(false);
-  const [loadingModules,setLoadingModules]= useState(false);
-
-  // Load programs on mount
   useEffect(() => {
     getPrograms().then((r) => {
       setPrograms(r.data);
-      // pre-select the program the instructor suggested
-      if (sub.suggested_module_id && r.data.length) {
-        // find program via suggested module — we'll rely on selProgram useEffect to load modules
-        // For now default to first program; modules useEffect will handle pre-selection
-        if (r.data.length) setSelProgram(String(r.data[0].id));
-      } else if (r.data.length) {
-        setSelProgram(String(r.data[0].id));
-      }
+      if (r.data.length) setSelProgram(String(r.data[0].id));
     });
   }, []);
 
-  // Load modules when program changes
   useEffect(() => {
     if (!selProgram) return;
     setLoadingModules(true);
@@ -77,13 +67,11 @@ function ReviewModal({ sub, onClose, onDone }) {
         admin_note: note,
         ...(decision === "approved" && {
           module_id: Number(selModule),
-          folder:    folder,
-          title:     titleOverride || sub.title,
+          folder,
+          title: titleOverride || sub.title,
         }),
       });
-      toast(decision === "approved"
-        ? "✅ Approved and added to module!"
-        : "❌ Submission rejected");
+      toast(decision === "approved" ? "✅ Approved and added to module!" : "❌ Submission rejected");
       onDone();
     } catch (e) {
       toast(e.response?.data?.error || "Failed", "error");
@@ -92,7 +80,6 @@ function ReviewModal({ sub, onClose, onDone }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      {/* Wide 2-col modal, scrollable body */}
       <div style={{
         background: "var(--bg2)", border: "1px solid var(--border2)",
         borderRadius: "var(--radius)", width: "100%", maxWidth: 720,
@@ -100,15 +87,9 @@ function ReviewModal({ sub, onClose, onDone }) {
         maxHeight: "90vh",
       }} onClick={e => e.stopPropagation()}>
 
-        {/* Fixed header */}
         <div style={{ padding: "22px 28px 16px", borderBottom: "1px solid var(--border)" }}>
           <h3 style={{ fontFamily: "var(--font-head)", fontSize: 20, marginBottom: 10 }}>Review Submission</h3>
-
-          {/* Submission info */}
-          <div style={{
-            background: "var(--bg3)", borderRadius: "var(--radius-sm)",
-            padding: "10px 14px", fontSize: 13,
-          }}>
+          <div style={{ background: "var(--bg3)", borderRadius: "var(--radius-sm)", padding: "10px 14px", fontSize: 13 }}>
             <div style={{ fontWeight: 600, color: "var(--text)" }}>{sub.title}</div>
             <div style={{ color: "var(--text3)", marginTop: 3 }}>
               📎 {sub.original_name} · {fmt(sub.file_size)} · by <strong style={{ color: "var(--text2)" }}>{sub.submitter_name}</strong>
@@ -128,10 +109,7 @@ function ReviewModal({ sub, onClose, onDone }) {
           </div>
         </div>
 
-        {/* Scrollable body */}
         <div style={{ padding: "20px 28px", overflowY: "auto", flex: 1 }}>
-
-          {/* Decision buttons */}
           <div className="form-group" style={{ marginBottom: 18 }}>
             <label className="form-label">Decision *</label>
             <div style={{ display: "flex", gap: 10 }}>
@@ -154,11 +132,7 @@ function ReviewModal({ sub, onClose, onDone }) {
               }}>
                 📌 File will be <strong>copied into the chosen module</strong> and visible to all instructors immediately.
               </div>
-
-              {/* ── 2-column layout for approve fields ── */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-
-                {/* LEFT col: title + folder */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div className="form-group">
                     <label className="form-label">Material title</label>
@@ -166,7 +140,6 @@ function ReviewModal({ sub, onClose, onDone }) {
                       onChange={e => setTitleOverride(e.target.value)}
                       placeholder="Leave blank to keep original" />
                   </div>
-
                   <div className="form-group">
                     <label className="form-label">Place in folder *</label>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -188,20 +161,16 @@ function ReviewModal({ sub, onClose, onDone }) {
                     </div>
                   </div>
                 </div>
-
-                {/* RIGHT col: program + module */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div className="form-group">
                     <label className="form-label">Program *</label>
-                    <select className="input" value={selProgram}
-                      onChange={e => setSelProgram(e.target.value)}>
+                    <select className="input" value={selProgram} onChange={e => setSelProgram(e.target.value)}>
                       {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Module *</label>
-                    <select className="input" value={selModule}
-                      onChange={e => setSelModule(e.target.value)}
+                    <select className="input" value={selModule} onChange={e => setSelModule(e.target.value)}
                       disabled={loadingModules || modules.length === 0}>
                       {loadingModules && <option>Loading…</option>}
                       {!loadingModules && modules.length === 0 && <option value="">No modules</option>}
@@ -213,7 +182,6 @@ function ReviewModal({ sub, onClose, onDone }) {
             </>
           )}
 
-          {/* Note to instructor */}
           <div className="form-group" style={{ marginTop: 18 }}>
             <label className="form-label">
               Note to instructor {decision === "approved" ? "(optional)" : "(explain why)"}
@@ -225,7 +193,6 @@ function ReviewModal({ sub, onClose, onDone }) {
           </div>
         </div>
 
-        {/* Fixed footer */}
         <div style={{
           padding: "16px 28px", borderTop: "1px solid var(--border)",
           display: "flex", gap: 10, justifyContent: "flex-end",
@@ -241,16 +208,141 @@ function ReviewModal({ sub, onClose, onDone }) {
   );
 }
 
+// ── Submission card ───────────────────────────────────────────
+function SubmissionCard({ sub, onReview, onDelete }) {
+  const sm    = STATUS_META[sub.status] || STATUS_META.pending;
+  const token = localStorage.getItem("token");
+  return (
+    <div style={{
+      background: "var(--bg2)",
+      border: `1px solid var(--border)`,
+      borderLeft: `4px solid ${sm.color}`,
+      borderRadius: "var(--radius)",
+      padding: "14px 16px",
+      display: "flex", gap: 14, alignItems: "flex-start",
+    }}>
+      <div style={{ fontSize: 24, flexShrink: 0, marginTop: 2 }}>{sm.icon}</div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{sub.title}</h4>
+        <div style={{ fontSize: 12, color: "var(--text3)" }}>
+          📎 {sub.original_name} · {fmt(sub.file_size)}
+        </div>
+        {sub.description && (
+          <div style={{
+            fontSize: 13, color: "var(--text2)", marginTop: 8,
+            background: "var(--bg3)", borderRadius: "var(--radius-sm)",
+            padding: "7px 11px", fontStyle: "italic",
+          }}>
+            "{sub.description}"
+          </div>
+        )}
+        {sub.admin_note && (
+          <div style={{ fontSize: 12, color: sm.color, marginTop: 7, fontWeight: 500 }}>
+            💬 Admin note: {sub.admin_note}
+          </div>
+        )}
+        <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 5 }}>
+          Submitted {new Date(sub.created_at).toLocaleDateString()}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+        <a href={`${submissionDownloadUrl(sub.id)}?token=${token}`}
+          target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
+          ⬇ Download
+        </a>
+        {sub.status === "pending" && (
+          <button className="btn btn-primary btn-sm" onClick={() => onReview(sub)}>
+            Review →
+          </button>
+        )}
+        <button className="btn btn-danger btn-sm" onClick={() => onDelete(sub.id)}>
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Instructor group (collapsible) ────────────────────────────
+function InstructorGroup({ name, email, submissions, onReview, onDelete }) {
+  const [open, setOpen] = useState(true);
+  const pending  = submissions.filter(s => s.status === "pending").length;
+  const approved = submissions.filter(s => s.status === "approved").length;
+  const rejected = submissions.filter(s => s.status === "rejected").length;
+
+  return (
+    <div style={{
+      border: "1px solid var(--border)",
+      borderRadius: "var(--radius)",
+      overflow: "hidden",
+      marginBottom: 14,
+    }}>
+      {/* Group header */}
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "13px 18px", background: "var(--bg2)",
+          cursor: "pointer", userSelect: "none",
+        }}
+      >
+        {/* Avatar */}
+        <div style={{
+          width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+          background: "rgba(108,143,255,.15)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 18,
+        }}>👤</div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{name}</div>
+          <div style={{ fontSize: 12, color: "var(--text3)" }}>{email}</div>
+        </div>
+
+        {/* Mini counts */}
+        <div style={{ display: "flex", gap: 8, fontSize: 12, flexShrink: 0 }}>
+          {pending  > 0 && <span style={{ color: "var(--warn)",    fontWeight: 700 }}>⏳ {pending}  pending</span>}
+          {approved > 0 && <span style={{ color: "var(--success)", fontWeight: 600 }}>✅ {approved} approved</span>}
+          {rejected > 0 && <span style={{ color: "var(--danger)",  fontWeight: 600 }}>❌ {rejected} rejected</span>}
+          <span style={{ color: "var(--text3)" }}>· {submissions.length} total</span>
+        </div>
+
+        <span style={{
+          color: "var(--text3)", fontSize: 12, flexShrink: 0,
+          transform: open ? "rotate(180deg)" : "rotate(0)",
+          transition: "transform .2s",
+        }}>▼</span>
+      </div>
+
+      {/* Submissions */}
+      {open && (
+        <div style={{
+          background: "var(--bg)",
+          borderTop: "1px solid var(--border)",
+          padding: "12px 16px",
+          display: "flex", flexDirection: "column", gap: 10,
+        }}>
+          {submissions.map(sub => (
+            <SubmissionCard key={sub.id} sub={sub} onReview={onReview} onDelete={onDelete} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────
 export default function AdminSubmissions() {
   const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [filter, setFilter]           = useState("pending");
-  const [reviewing, setReviewing]     = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [filter,      setFilter]      = useState("pending");
+  const [reviewing,   setReviewing]   = useState(null);
   const toast = useToast();
 
   const load = () =>
-    getAllSubmissions().then((r) => setSubmissions(r.data)).catch(() => {}).finally(() => setLoading(false));
+    getAllSubmissions().then(r => setSubmissions(r.data)).catch(() => {}).finally(() => setLoading(false));
 
   useEffect(() => { load(); }, []);
 
@@ -259,26 +351,32 @@ export default function AdminSubmissions() {
     try {
       await deleteSubmission(id);
       toast("Deleted");
-      setSubmissions((s) => s.filter((x) => x.id !== id));
+      setSubmissions(s => s.filter(x => x.id !== id));
     } catch { toast("Failed", "error"); }
   };
 
-  const filtered = submissions.filter((s) => filter === "all" || s.status === filter);
-  const counts   = {
-    pending:  submissions.filter((s) => s.status === "pending").length,
-    approved: submissions.filter((s) => s.status === "approved").length,
-    rejected: submissions.filter((s) => s.status === "rejected").length,
+  const filtered = submissions.filter(s => filter === "all" || s.status === filter);
+
+  const counts = {
+    pending:  submissions.filter(s => s.status === "pending").length,
+    approved: submissions.filter(s => s.status === "approved").length,
+    rejected: submissions.filter(s => s.status === "rejected").length,
     all:      submissions.length,
   };
+
+  // Group filtered submissions by instructor
+  const grouped = {};
+  filtered.forEach(sub => {
+    const key = sub.submitter_email || sub.submitter_name;
+    if (!grouped[key]) grouped[key] = { name: sub.submitter_name, email: sub.submitter_email, subs: [] };
+    grouped[key].subs.push(sub);
+  });
 
   return (
     <div>
       {reviewing && (
-        <ReviewModal
-          sub={reviewing}
-          onClose={() => setReviewing(null)}
-          onDone={() => { setReviewing(null); load(); }}
-        />
+        <ReviewModal sub={reviewing} onClose={() => setReviewing(null)}
+          onDone={() => { setReviewing(null); load(); }} />
       )}
 
       <div className="page-header">
@@ -306,11 +404,9 @@ export default function AdminSubmissions() {
           { key: "rejected", label: "Rejected" },
           { key: "all",      label: "All"      },
         ].map(({ key, label }) => (
-          <button
-            key={key}
+          <button key={key}
             className={"btn btn-sm " + (filter === key ? "btn-primary" : "btn-ghost")}
-            onClick={() => setFilter(key)}
-          >
+            onClick={() => setFilter(key)}>
             {STATUS_META[key]?.icon || "📋"} {label} ({counts[key] ?? submissions.length})
           </button>
         ))}
@@ -322,72 +418,13 @@ export default function AdminSubmissions() {
           <p>No {filter === "all" ? "" : filter} submissions.</p>
         </div>
       ) : (
-        <div className="grid-list">
-          {filtered.map((sub) => {
-            const sm    = STATUS_META[sub.status] || STATUS_META.pending;
-            const token = localStorage.getItem("token");
-            return (
-              <div key={sub.id} style={{
-                background: "var(--bg2)",
-                border: `1px solid var(--border)`,
-                borderLeft: `4px solid ${sm.color}`,
-                borderRadius: "var(--radius)",
-                padding: "16px 18px",
-                display: "flex", gap: 14, alignItems: "flex-start",
-              }}>
-                <div style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>{sm.icon}</div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{sub.title}</h4>
-                  <div style={{ fontSize: 12, color: "var(--text3)" }}>
-                    📎 {sub.original_name} · {fmt(sub.file_size)}
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
-                    👤 <strong style={{ color: "var(--text2)" }}>{sub.submitter_name}</strong> ({sub.submitter_email})
-                  </div>
-                  {sub.description && (
-                    <div style={{
-                      fontSize: 13, color: "var(--text2)", marginTop: 8,
-                      background: "var(--bg3)", borderRadius: "var(--radius-sm)",
-                      padding: "8px 12px", fontStyle: "italic",
-                    }}>
-                      "{sub.description}"
-                    </div>
-                  )}
-                  {sub.admin_note && (
-                    <div style={{ fontSize: 12, color: sm.color, marginTop: 8, fontWeight: 500 }}>
-                      💬 Admin note: {sub.admin_note}
-                    </div>
-                  )}
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6 }}>
-                    Submitted {new Date(sub.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-                  <a
-                    href={`${submissionDownloadUrl(sub.id)}?token=${token}`}
-                    target="_blank" rel="noreferrer"
-                    className="btn btn-ghost btn-sm"
-                  >⬇ Download</a>
-
-                  {sub.status === "pending" && (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => setReviewing(sub)}
-                    >
-                      Review →
-                    </button>
-                  )}
-
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(sub.id)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        Object.values(grouped).map(({ name, email, subs }) => (
+          <InstructorGroup
+            key={email || name}
+            name={name} email={email} submissions={subs}
+            onReview={setReviewing} onDelete={handleDelete}
+          />
+        ))
       )}
     </div>
   );

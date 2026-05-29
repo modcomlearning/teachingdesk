@@ -24,7 +24,7 @@ export function ProtectedRoute({ children, adminOnly = false }) {
           >
             <span /><span /><span />
           </button>
-          <div className="mobile-logo">Note<span>Share</span></div>
+          <div className="mobile-logo">Teaching<span>Desk</span></div>
         </div>
 
         {children}
